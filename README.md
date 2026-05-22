@@ -17,7 +17,7 @@ A small, stylish, transparent URL alias tool for your terminal. Mugamoodi create
 Clone the repo, make the launcher executable, then run it:
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/mugamoodi.git
+git clone https://github.com/jackdaniels23-ar/mugamoodi.git
 cd mugamoodi
 chmod +x mugamoodi
 ./mugamoodi --help
@@ -29,6 +29,8 @@ Optional: put it somewhere on your `PATH`:
 sudo ln -s "$PWD/mugamoodi" /usr/local/bin/mugamoodi
 mugamoodi --help
 ```
+
+For detailed installation, update, and uninstall steps, see [INSTALL.md](INSTALL.md).
 
 ## Usage
 
@@ -79,13 +81,16 @@ The Windows wrapper is still included:
 
 ## Push To GitHub
 
-After creating an empty GitHub repository named `mugamoodi`, run:
+This repository is already hosted at:
+
+```text
+https://github.com/jackdaniels23-ar/mugamoodi.git
+```
+
+To push local changes:
 
 ```bash
-git init
 git add .
-git commit -m "Initial Mugamoodi CLI"
-git branch -M main
-git remote add origin https://github.com/YOUR-USERNAME/mugamoodi.git
-git push -u origin main
+git commit -m "Describe your change"
+git push
 ```
