@@ -154,8 +154,30 @@ def format_alias(slug: str, base_url: str) -> str:
     return f"{base_url.rstrip('/')}/{slug}"
 
 
+def prompt_required(label: str) -> str:
+    while True:
+        value = input(f"{label}: ").strip()
+        if value:
+            return value
+        print("Please enter a value.")
+
+
+def normalize_base_url(raw_base_url: str) -> str:
+    base_url = normalize_url(raw_base_url)
+    parsed = urlparse(base_url)
+    return f"{parsed.scheme}://{parsed.netloc}{parsed.path.rstrip('/')}"
+
+
 def command_mask(args: argparse.Namespace) -> int:
     banner()
+    if not args.url:
+        section("Interactive mask")
+        args.url = prompt_required("1. URL to be changed")
+        args.base_url = normalize_base_url(prompt_required("2. Masking website"))
+        if not args.alias:
+            custom_alias = input("Alias slug (press Enter for random): ").strip()
+            args.alias = custom_alias or None
+
     db = load_db()
     url = normalize_url(args.url)
     slug = validate_slug(args.alias) if args.alias else make_slug(db)
@@ -165,6 +187,7 @@ def command_mask(args: argparse.Namespace) -> int:
 
     db[slug] = {
         "url": url,
+        "base_url": args.base_url,
         "note": args.note or "",
         "created_at": now_iso(),
     }
@@ -178,6 +201,10 @@ def command_mask(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_wizard(args: argparse.Namespace) -> int:
+    return command_mask(args)
+
+
 def command_reveal(args: argparse.Namespace) -> int:
     banner()
     db = load_db()
@@ -187,8 +214,9 @@ def command_reveal(args: argparse.Namespace) -> int:
     if not item:
         raise SystemExit(f"No alias found for '{slug}'.")
 
+    base_url = item.get("base_url", args.base_url)
     section("Reveal")
-    detail_row("alias", blue(format_alias(slug, args.base_url)))
+    detail_row("alias", blue(format_alias(slug, base_url)))
     detail_row("destination", item["url"])
     detail_row("created", item.get("created_at", "unknown"))
     if item.get("note"):
@@ -206,7 +234,8 @@ def command_list(args: argparse.Namespace) -> int:
 
     rows = []
     for slug, item in sorted(db.items()):
-        rows.append((format_alias(slug, args.base_url), item["url"], item.get("note", "")))
+        base_url = item.get("base_url", args.base_url)
+        rows.append((format_alias(slug, base_url), item["url"], item.get("note", "")))
 
     alias_width = min(max(len(row[0]) for row in rows), 48)
     section(f"Saved aliases ({len(rows)})")
@@ -230,8 +259,9 @@ def command_remove(args: argparse.Namespace) -> int:
 
     removed = db.pop(slug)
     save_db(db)
+    base_url = removed.get("base_url", args.base_url)
     success("Alias removed")
-    detail_row("alias", blue(format_alias(slug, args.base_url)))
+    detail_row("alias", blue(format_alias(slug, base_url)))
     detail_row("destination", removed["url"])
     return 0
 
@@ -266,6 +296,7 @@ def build_parser() -> argparse.ArgumentParser:
         description="Mugamoodi creates and manages transparent local aliases for URLs.",
         epilog=(
             "examples:\n"
+            "  mugamoodi mask\n"
             "  mugamoodi mask example.com -a demo\n"
             "  mugamoodi reveal demo\n"
             "  mugamoodi list\n"
@@ -282,11 +313,17 @@ def build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     mask_parser = subparsers.add_parser("mask", help="Create a new URL alias.")
-    mask_parser.add_argument("url", help="Destination URL.")
+    mask_parser.add_argument("url", nargs="?", help="Destination URL.")
     mask_parser.add_argument("-a", "--alias", help="Custom alias slug.")
     mask_parser.add_argument("-n", "--note", help="Optional label for your own records.")
     mask_parser.add_argument("-f", "--force", action="store_true", help="Replace an existing alias.")
     mask_parser.set_defaults(func=command_mask)
+
+    wizard_parser = subparsers.add_parser("wizard", help="Ask for the URL and masking website.")
+    wizard_parser.add_argument("-a", "--alias", help="Custom alias slug.")
+    wizard_parser.add_argument("-n", "--note", help="Optional label for your own records.")
+    wizard_parser.add_argument("-f", "--force", action="store_true", help="Replace an existing alias.")
+    wizard_parser.set_defaults(url=None, func=command_wizard)
 
     reveal_parser = subparsers.add_parser("reveal", help="Show the real destination.")
     reveal_parser.add_argument("alias_or_slug", help="Alias URL or slug.")

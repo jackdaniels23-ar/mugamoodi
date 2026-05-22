@@ -34,6 +34,30 @@ For detailed installation, update, and uninstall steps, see [INSTALL.md](INSTALL
 
 ## Usage
 
+Interactive mode asks for the two main values:
+
+```bash
+./mugamoodi mask
+```
+
+It will ask:
+
+```text
+1. URL to be changed: https://example.com
+2. Masking website: https://my-site.com
+Alias slug (press Enter for random): demo
+```
+
+Output:
+
+```text
+[ok] Alias created
+        masked  https://my-site.com/demo
+   destination  https://example.com
+```
+
+You can also use direct commands:
+
 ```bash
 ./mugamoodi mask example.com -a demo
 ./mugamoodi reveal demo

@@ -12,4 +12,7 @@ env/
 .test-data/
 .test-data-style/
 .test-data-blue/
+.test-full-run/
+.test-interactive/
+.test-interactive-2/
 links.json

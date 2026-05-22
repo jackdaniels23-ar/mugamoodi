@@ -33,9 +33,17 @@ chmod +x mugamoodi
 
 ```bash
 ./mugamoodi --help
+./mugamoodi mask
 ./mugamoodi mask https://example.com -a demo
 ./mugamoodi reveal demo
 ./mugamoodi list
+```
+
+Interactive mode asks for:
+
+```text
+1. URL to be changed
+2. Masking website
 ```
 
 ## 5. Install Globally
