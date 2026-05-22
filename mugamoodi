@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+
+script="$0"
+while [ -h "$script" ]; do
+    dir="$(CDPATH= cd -- "$(dirname -- "$script")" && pwd)"
+    script="$(readlink "$script")"
+    case "$script" in
+        /*) ;;
+        *) script="$dir/$script" ;;
+    esac
+done
+
+dir="$(CDPATH= cd -- "$(dirname -- "$script")" && pwd)"
+exec python3 "$dir/mugamoodi.py" "$@"
