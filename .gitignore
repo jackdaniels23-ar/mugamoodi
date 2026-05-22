@@ -10,4 +10,5 @@ env/
 .DS_Store
 .test-appdata/
 .test-data/
+.test-data-style/
 links.json

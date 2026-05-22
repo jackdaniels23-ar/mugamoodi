@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 import re
+import shutil
 import secrets
 import string
 import sys
@@ -31,6 +32,67 @@ DB_PATH = APP_DIR / "links.json"
 DEFAULT_BASE_URL = "https://mugamoodi.local"
 SLUG_ALPHABET = string.ascii_lowercase + string.digits
 SLUG_PATTERN = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{1,63}$")
+BRAND = "Mugamoodi"
+TAGLINE = "transparent URL aliases for your terminal"
+
+
+def use_color() -> bool:
+    return sys.stdout.isatty() and not os.getenv("NO_COLOR")
+
+
+def paint(text: str, code: str) -> str:
+    if not use_color():
+        return text
+    return f"\033[{code}m{text}\033[0m"
+
+
+def cyan(text: str) -> str:
+    return paint(text, "36")
+
+
+def green(text: str) -> str:
+    return paint(text, "32")
+
+
+def yellow(text: str) -> str:
+    return paint(text, "33")
+
+
+def dim(text: str) -> str:
+    return paint(text, "2")
+
+
+def bold(text: str) -> str:
+    return paint(text, "1")
+
+
+def terminal_width(default: int = 78) -> int:
+    return max(58, min(shutil.get_terminal_size((default, 20)).columns, 100))
+
+
+def banner() -> None:
+    width = terminal_width()
+    title = f"{BRAND} :: {TAGLINE}"
+    print(cyan("+" + "-" * (width - 2) + "+"))
+    print(cyan("|") + f" {bold(title)}".ljust(width - 1) + cyan("|"))
+    print(cyan("+" + "-" * (width - 2) + "+"))
+
+
+def section(title: str) -> None:
+    print()
+    print(cyan(f"== {title} =="))
+
+
+def detail_row(label: str, value: str) -> None:
+    print(f"  {dim(label.rjust(12))}  {value}")
+
+
+def success(message: str) -> None:
+    print(f"{green('[ok]')} {bold(message)}")
+
+
+def warn(message: str) -> None:
+    print(f"{yellow('[!]')} {message}")
 
 
 def now_iso() -> str:
@@ -93,6 +155,7 @@ def format_alias(slug: str, base_url: str) -> str:
 
 
 def command_mask(args: argparse.Namespace) -> int:
+    banner()
     db = load_db()
     url = normalize_url(args.url)
     slug = validate_slug(args.alias) if args.alias else make_slug(db)
@@ -107,15 +170,16 @@ def command_mask(args: argparse.Namespace) -> int:
     }
     save_db(db)
 
-    print("Alias created")
-    print(f"  masked:      {format_alias(slug, args.base_url)}")
-    print(f"  destination: {url}")
+    success("Alias created")
+    detail_row("masked", cyan(format_alias(slug, args.base_url)))
+    detail_row("destination", url)
     if args.note:
-        print(f"  note:        {args.note}")
+        detail_row("note", args.note)
     return 0
 
 
 def command_reveal(args: argparse.Namespace) -> int:
+    banner()
     db = load_db()
     slug = extract_slug(args.alias_or_slug)
     item = db.get(slug)
@@ -123,18 +187,21 @@ def command_reveal(args: argparse.Namespace) -> int:
     if not item:
         raise SystemExit(f"No alias found for '{slug}'.")
 
-    print(f"alias:       {format_alias(slug, args.base_url)}")
-    print(f"destination: {item['url']}")
-    print(f"created:     {item.get('created_at', 'unknown')}")
+    section("Reveal")
+    detail_row("alias", cyan(format_alias(slug, args.base_url)))
+    detail_row("destination", item["url"])
+    detail_row("created", item.get("created_at", "unknown"))
     if item.get("note"):
-        print(f"note:        {item['note']}")
+        detail_row("note", item["note"])
     return 0
 
 
 def command_list(args: argparse.Namespace) -> int:
+    banner()
     db = load_db()
     if not db:
-        print("No aliases yet.")
+        warn("No aliases yet.")
+        print(dim("  Try: mugamoodi mask example.com -a demo"))
         return 0
 
     rows = []
@@ -142,17 +209,19 @@ def command_list(args: argparse.Namespace) -> int:
         rows.append((format_alias(slug, args.base_url), item["url"], item.get("note", "")))
 
     alias_width = min(max(len(row[0]) for row in rows), 48)
-    print(f"{'alias'.ljust(alias_width)}  destination")
-    print(f"{'-' * alias_width}  {'-' * 40}")
+    section(f"Saved aliases ({len(rows)})")
+    print(f"  {bold('alias'.ljust(alias_width))}  {bold('destination')}")
+    print(f"  {dim('-' * alias_width)}  {dim('-' * 40)}")
     for alias, url, note in rows:
         label = alias if len(alias) <= alias_width else alias[: alias_width - 1] + "..."
         suffix = f"  ({note})" if note else ""
-        print(f"{label.ljust(alias_width)}  {url}{suffix}")
+        print(f"  {cyan(label.ljust(alias_width))}  {url}{dim(suffix)}")
 
     return 0
 
 
 def command_remove(args: argparse.Namespace) -> int:
+    banner()
     db = load_db()
     slug = extract_slug(args.alias_or_slug)
 
@@ -161,11 +230,14 @@ def command_remove(args: argparse.Namespace) -> int:
 
     removed = db.pop(slug)
     save_db(db)
-    print(f"Removed {format_alias(slug, args.base_url)} -> {removed['url']}")
+    success("Alias removed")
+    detail_row("alias", cyan(format_alias(slug, args.base_url)))
+    detail_row("destination", removed["url"])
     return 0
 
 
 def command_open(args: argparse.Namespace) -> int:
+    banner()
     db = load_db()
     slug = extract_slug(args.alias_or_slug)
     item = db.get(slug)
@@ -173,7 +245,8 @@ def command_open(args: argparse.Namespace) -> int:
     if not item:
         raise SystemExit(f"No alias found for '{slug}'.")
 
-    print(f"Opening destination: {item['url']}")
+    success("Opening destination")
+    detail_row("url", item["url"])
     webbrowser.open(item["url"])
     return 0
 
@@ -191,6 +264,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="mugamoodi",
         description="Mugamoodi creates and manages transparent local aliases for URLs.",
+        epilog=(
+            "examples:\n"
+            "  mugamoodi mask example.com -a demo\n"
+            "  mugamoodi reveal demo\n"
+            "  mugamoodi list\n"
+            "  NO_COLOR=1 mugamoodi list"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
         "--base-url",

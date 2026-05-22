@@ -1,6 +1,16 @@
 # Mugamoodi
 
-A small, transparent URL alias tool for your terminal. Mugamoodi creates memorable local aliases and stores the real destination on your machine.
+A small, stylish, transparent URL alias tool for your terminal. Mugamoodi creates memorable local aliases and stores the real destination on your machine.
+
+```text
++----------------------------------------------------------------------------+
+| Mugamoodi :: transparent URL aliases for your terminal                      |
++----------------------------------------------------------------------------+
+
+[ok] Alias created
+        masked  https://mugamoodi.local/demo
+   destination  https://example.com
+```
 
 ## Linux Install
 
@@ -36,6 +46,14 @@ By default, aliases are displayed as `https://mugamoodi.local/<alias>`. You can 
 ```
 
 The destination is always shown when an alias is created, listed, or revealed.
+
+## Terminal Style
+
+Mugamoodi uses ANSI colors when your terminal supports them. Disable colors with:
+
+```bash
+NO_COLOR=1 ./mugamoodi list
+```
 
 ## Storage
 
