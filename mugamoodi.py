@@ -46,8 +46,8 @@ def paint(text: str, code: str) -> str:
     return f"\033[{code}m{text}\033[0m"
 
 
-def cyan(text: str) -> str:
-    return paint(text, "36")
+def blue(text: str) -> str:
+    return paint(text, "34")
 
 
 def green(text: str) -> str:
@@ -73,14 +73,14 @@ def terminal_width(default: int = 78) -> int:
 def banner() -> None:
     width = terminal_width()
     title = f"{BRAND} :: {TAGLINE}"
-    print(cyan("+" + "-" * (width - 2) + "+"))
-    print(cyan("|") + f" {bold(title)}".ljust(width - 1) + cyan("|"))
-    print(cyan("+" + "-" * (width - 2) + "+"))
+    print(blue("+" + "-" * (width - 2) + "+"))
+    print(blue("|") + f" {bold(title)}".ljust(width - 1) + blue("|"))
+    print(blue("+" + "-" * (width - 2) + "+"))
 
 
 def section(title: str) -> None:
     print()
-    print(cyan(f"== {title} =="))
+    print(blue(f"== {title} =="))
 
 
 def detail_row(label: str, value: str) -> None:
@@ -171,7 +171,7 @@ def command_mask(args: argparse.Namespace) -> int:
     save_db(db)
 
     success("Alias created")
-    detail_row("masked", cyan(format_alias(slug, args.base_url)))
+    detail_row("masked", blue(format_alias(slug, args.base_url)))
     detail_row("destination", url)
     if args.note:
         detail_row("note", args.note)
@@ -188,7 +188,7 @@ def command_reveal(args: argparse.Namespace) -> int:
         raise SystemExit(f"No alias found for '{slug}'.")
 
     section("Reveal")
-    detail_row("alias", cyan(format_alias(slug, args.base_url)))
+    detail_row("alias", blue(format_alias(slug, args.base_url)))
     detail_row("destination", item["url"])
     detail_row("created", item.get("created_at", "unknown"))
     if item.get("note"):
@@ -215,7 +215,7 @@ def command_list(args: argparse.Namespace) -> int:
     for alias, url, note in rows:
         label = alias if len(alias) <= alias_width else alias[: alias_width - 1] + "..."
         suffix = f"  ({note})" if note else ""
-        print(f"  {cyan(label.ljust(alias_width))}  {url}{dim(suffix)}")
+        print(f"  {blue(label.ljust(alias_width))}  {url}{dim(suffix)}")
 
     return 0
 
@@ -231,7 +231,7 @@ def command_remove(args: argparse.Namespace) -> int:
     removed = db.pop(slug)
     save_db(db)
     success("Alias removed")
-    detail_row("alias", cyan(format_alias(slug, args.base_url)))
+    detail_row("alias", blue(format_alias(slug, args.base_url)))
     detail_row("destination", removed["url"])
     return 0
 

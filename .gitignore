@@ -11,4 +11,5 @@ env/
 .test-appdata/
 .test-data/
 .test-data-style/
+.test-data-blue/
 links.json
